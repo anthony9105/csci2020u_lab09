@@ -3,26 +3,18 @@
  Lab 09
  */
 
-import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.application.Application;;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Date;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.geom.Line2D;
-
 
 public class Main extends Application
 {
@@ -42,26 +34,29 @@ public class Main extends Application
         String saveFileName2 = "AAPL.csv";
         String tickerSymbol2 = "AAPL";
 
+        // download/create/save the stock prices from the url to a csv file
         downloadStockPrices(saveFileName1, tickerSymbol1);
         downloadStockPrices(saveFileName2, tickerSymbol2);
 
-        //Line line = new Line(1, 2, 1, 1);
-        /*
+        // x axis
         NumberAxis xAxis = new NumberAxis(1, 72, 1);
 
-        //Defining y axis
+        // y axis
         NumberAxis yAxis = new NumberAxis(0f, 800f, 20f);
         yAxis.setLabel("Stock close price ($)");
 
         LineChart lineChart = new LineChart(xAxis, yAxis);
         stock1.setName(tickerSymbol1);
         stock2.setName(tickerSymbol2);
+
+        // load data from the csv files for the lineChart
         loadData(saveFileName1, lineChart, stock1);
         loadData(saveFileName2, lineChart, stock2);
+
         xAxis.setLabel("Months (from "+dates[0]+" to "+dates[dates.length-1]+")");
 
         lineChart.setPrefSize(800, 600);
-        Group root = new Group(lineChart);*/
+        Group root = new Group(lineChart);
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setHeight(700);
@@ -70,6 +65,11 @@ public class Main extends Application
         primaryStage.show();
     }
 
+    /**
+     * downloadStockPrices method used to download a csv file of a stock's data from 2010 to 2015
+     * @param saveFileName - String file name to save this as
+     * @param tickerSymbol - String ticker symbol of the stock
+     */
     public void downloadStockPrices(String saveFileName, String tickerSymbol)
     {
         try
@@ -82,19 +82,23 @@ public class Main extends Application
             conn.setDoInput(true);
             InputStream is = conn.getInputStream();
 
+            // filepath for saving/creating the file
             String saveFilePath = System.getProperty("user.dir");
             saveFilePath += "/src/main/resources/" + saveFileName;
 
             // opens an output stream to save into file
             FileOutputStream outputStream = new FileOutputStream(saveFilePath);
 
+            // write to the file
             int BUFFER_SIZE = 4096;
             int bytesRead = -1;
             byte[] buffer = new byte[BUFFER_SIZE];
-            while ((bytesRead = is.read(buffer)) != -1) {
+            while ((bytesRead = is.read(buffer)) != -1)
+            {
                 outputStream.write(buffer, 0, bytesRead);
             }
 
+            // close streams
             outputStream.close();
             is.close();
         }
@@ -108,9 +112,16 @@ public class Main extends Application
         }
     }
 
+    /**
+     * loadData method used to load the data from the csv file
+     * @param fileName - String csv file name
+     * @param lineChart - the LineChart
+     * @param stock - XYChart.Series representing one of the stocks in the line chart
+     */
     public void loadData(String fileName, LineChart lineChart, XYChart.Series stock)
     {
         try {
+            // filepath
             String csvFilePath = System.getProperty("user.dir");
             csvFilePath += "/src/main/resources/" + fileName;
 
@@ -119,33 +130,25 @@ public class Main extends Application
             BufferedReader input = new BufferedReader(fileReader);
 
             String line = null;
-            String[] lineArray = new String[7];
             int i = 0;
-            float previousYValue = 0;
-            ObservableList<Line> linesToDraw = FXCollections.observableArrayList();
 
             // loop to go through each line in the CSV file
-            while ((line = input.readLine()) != null) {
+            while ((line = input.readLine()) != null)
+            {
                 // split the String line into a String array using commas as delimiters
-                lineArray = line.split(",");
+                String [] lineArray = line.split(",");
 
-                if (i != 0) {
-                    dates[i-1] = lineArray[0];
-                    stock.getData().add(new XYChart.Data(i + 1, Float.parseFloat(lineArray[4])));
-
-                    Line lineToDraw = new Line(i - 1, previousYValue, i + 1, Float.parseFloat(lineArray[4]));
-                    linesToDraw.add(lineToDraw);
-                    previousYValue = Float.parseFloat(lineArray[4]);
-                }
-                else
+                if (i != 0)
                 {
-                    previousYValue = Float.parseFloat(lineArray[4]);
+                    dates[i-1] = lineArray[0];
+                    // adding the data point to the XYChart.Series.
+                    // lineArray[4] is the stock close price and i + 1 is the month number (starting from January 2010)
+                    stock.getData().add(new XYChart.Data(i + 1, Float.parseFloat(lineArray[4])));
                 }
                 i++;    // update the iterator variable
             }
-            root.getChildren().addAll(linesToDraw);
-            //lineChart.getData().add(stock);
-            System.out.println(dates[0]);
+            // add the updated XYChart.Series to the line chart
+            lineChart.getData().add(stock);
         }
         catch(IOException io)
         {
